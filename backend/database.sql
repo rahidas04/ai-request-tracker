@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  department TEXT NOT NULL,
+  project_title TEXT NOT NULL,
+  problem_description TEXT NOT NULL,
+  urgency TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Pending',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
