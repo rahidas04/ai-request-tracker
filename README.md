@@ -2,6 +2,12 @@
 
 AI Request Tracker is a simple full-stack web application for submitting, reviewing, and managing internal AI project requests. It works like a lightweight ticketing system where team members can submit ideas and committee members can review, filter, and update request statuses.
 
+## Deployment
+The frontend app is deployed via Github Pages, but due to time constraints, I was unable to get the backend working as well. Please test the app locally to see all the features. 
+
+Link to Deployment: https://rahidas04.github.io/ai-request-tracker/
+
+
 ## Features
 
 - Submit AI project requests through a validated form
@@ -82,6 +88,7 @@ http://localhost:5173
 
 
 ## How to Use the App
+
 1. Fill out the request submission form with your name, email, department, project title, problem description, and urgency.
 2. Submit the form.
 3. A success message will appear with the generated request ID.
@@ -133,7 +140,8 @@ Request detail modal
 
 1. No user authentication is included as it is not required, but would've wanted to test it out as an extra feature. 
 2. No pagination is included, so the dashboard is best suited for a smaller number of requests.
+3. The deployed version only works with frontend, and not backend/database. To fully run the app, you must test it locally. 
 
 ## Future Improvements
 
-If I had more time, I would improve the app by adding user authentication for committee members and pagination for larger request lists.
+If I had more time, I would improve the app by adding user authentication for committee members, add pagination for larger request lists, and have a fully working frontend/backend deployed version rather than just frontend. 

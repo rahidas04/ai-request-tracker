@@ -42,25 +42,35 @@ function App() {
   }, [filters]);
 
   async function fetchRequests() {
-    const params = new URLSearchParams();
+    try {
+      const params = new URLSearchParams();
 
-    if (filters.department) {
-      params.append("department", filters.department);
+      if (filters.department) {
+        params.append("department", filters.department);
+      }
+
+      if (filters.status) {
+        params.append("status", filters.status);
+      }
+
+      const response = await fetch(`${API_URL}/requests?${params.toString()}`);
+      const data = await response.json();
+
+      setRequests(data);
+    } catch (error) {
+      setErrorMessage("Could not load requests.");
     }
-
-    if (filters.status) {
-      params.append("status", filters.status);
-    }
-
-    const response = await fetch(`${API_URL}/requests?${params.toString()}`);
-    const data = await response.json();
-    setRequests(data);
   }
 
   async function fetchStats() {
-    const response = await fetch(`${API_URL}/stats`);
-    const data = await response.json();
-    setStats(data);
+    try {
+      const response = await fetch(`${API_URL}/stats`);
+      const data = await response.json();
+
+      setStats(data);
+    } catch (error) {
+      setErrorMessage("Could not load statistics.");
+    }
   }
 
   function handleInputChange(event) {
@@ -114,34 +124,72 @@ function App() {
   }
 
   async function updateStatus(id, newStatus) {
-    await fetch(`${API_URL}/requests/${id}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ status: newStatus }),
-    });
+    try {
+      await fetch(`${API_URL}/requests/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-    fetchRequests();
-    fetchStats();
+      fetchRequests();
+      fetchStats();
+    } catch (error) {
+      setErrorMessage("Could not update request status.");
+    }
   }
 
   async function openDetails(id) {
-    const response = await fetch(`${API_URL}/requests/${id}`);
-    const data = await response.json();
-    setSelectedRequest(data);
+    try {
+      const response = await fetch(`${API_URL}/requests/${id}`);
+      const data = await response.json();
+
+      setSelectedRequest(data);
+    } catch (error) {
+      setErrorMessage("Could not load request details.");
+    }
   }
 
-  function resetFilters() {
+  async function resetFilters() {
     setFilters({
       department: "",
       status: "",
     });
+
+    try {
+      const response = await fetch(`${API_URL}/requests`);
+      const data = await response.json();
+
+      setRequests(data);
+    } catch (error) {
+      setErrorMessage("Could not clear filters.");
+    }
   }
 
   function getUrgencyClass(urgency) {
     return `urgency ${urgency.toLowerCase()}`;
   }
+
+  const statusChartData = statuses.map((status) => ({
+    label: status,
+    count: stats?.byStatus?.[status] ?? 0,
+  }));
+
+  const departmentChartData = departments.map((department) => ({
+    label: department,
+    count: stats?.byDepartment?.[department] ?? 0,
+  }));
+
+  const maxStatusCount = Math.max(
+    ...statusChartData.map((item) => item.count),
+    1
+  );
+
+  const maxDepartmentCount = Math.max(
+    ...departmentChartData.map((item) => item.count),
+    1
+  );
 
   return (
     <main className="app">
@@ -157,7 +205,7 @@ function App() {
       </header>
 
       <section className="layout">
-        <section className="card">
+        <section className="card form-card">
           <h2>Submit a New Request</h2>
 
           {successMessage && <p className="success">{successMessage}</p>}
@@ -250,31 +298,62 @@ function App() {
 
         <section className="dashboard">
           <section className="stats-grid">
-            <div className="stat-card">
+            <div className="stat-card total-card">
               <span>Total Requests</span>
               <strong>{stats?.total ?? 0}</strong>
+              <p>submitted overall</p>
             </div>
 
-            <div className="stat-card">
-              <span>By Status</span>
-              {statuses.map((status) => (
-                <p key={status}>
-                  {status}: {stats?.byStatus?.[status] ?? 0}
-                </p>
-              ))}
+            <div className="stat-card chart-card">
+              <span>Requests by Status</span>
+
+              <div className="bar-chart">
+                {statusChartData.map((item) => (
+                  <div className="bar-row" key={item.label}>
+                    <div className="bar-label">
+                      <span>{item.label}</span>
+                      <strong>{item.count}</strong>
+                    </div>
+
+                    <div className="bar-track">
+                      <div
+                        className={`bar-fill status-${item.label.toLowerCase()}`}
+                        style={{
+                          width: `${(item.count / maxStatusCount) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="stat-card">
-              <span>By Department</span>
-              {departments.map((department) => (
-                <p key={department}>
-                  {department}: {stats?.byDepartment?.[department] ?? 0}
-                </p>
-              ))}
+            <div className="stat-card chart-card">
+              <span>Requests by Department</span>
+
+              <div className="bar-chart">
+                {departmentChartData.map((item) => (
+                  <div className="bar-row" key={item.label}>
+                    <div className="bar-label">
+                      <span>{item.label}</span>
+                      <strong>{item.count}</strong>
+                    </div>
+
+                    <div className="bar-track">
+                      <div
+                        className="bar-fill department-fill"
+                        style={{
+                          width: `${(item.count / maxDepartmentCount) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
-          <section className="card">
+          <section className="card dashboard-card">
             <div className="section-header">
               <h2>Committee Dashboard</h2>
 
@@ -380,7 +459,7 @@ function App() {
       {selectedRequest && (
         <div className="modal-backdrop" onClick={() => setSelectedRequest(null)}>
           <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <div className="section-header">
+            <div className="section-header modal-header">
               <h2>{selectedRequest.project_title}</h2>
               <button
                 type="button"
@@ -391,32 +470,34 @@ function App() {
               </button>
             </div>
 
-            <p>
-              <strong>ID:</strong> {selectedRequest.request_id}
-            </p>
-            <p>
-              <strong>Name:</strong> {selectedRequest.name}
-            </p>
-            <p>
-              <strong>Email:</strong> {selectedRequest.email}
-            </p>
-            <p>
-              <strong>Department:</strong> {selectedRequest.department}
-            </p>
-            <p>
-              <strong>Urgency:</strong> {selectedRequest.urgency}
-            </p>
-            <p>
-              <strong>Status:</strong> {selectedRequest.status}
-            </p>
-            <p>
-              <strong>Submitted:</strong>{" "}
-              {new Date(selectedRequest.created_at).toLocaleString()}
-            </p>
-            <p>
-              <strong>Problem Description:</strong>
-            </p>
-            <p>{selectedRequest.problem_description}</p>
+            <div className="modal-content">
+              <p>
+                <strong>ID:</strong> {selectedRequest.request_id}
+              </p>
+              <p>
+                <strong>Name:</strong> {selectedRequest.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedRequest.email}
+              </p>
+              <p>
+                <strong>Department:</strong> {selectedRequest.department}
+              </p>
+              <p>
+                <strong>Urgency:</strong> {selectedRequest.urgency}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedRequest.status}
+              </p>
+              <p>
+                <strong>Submitted:</strong>{" "}
+                {new Date(selectedRequest.created_at).toLocaleString()}
+              </p>
+              <p>
+                <strong>Problem Description:</strong>
+              </p>
+              <p>{selectedRequest.problem_description}</p>
+            </div>
           </div>
         </div>
       )}
