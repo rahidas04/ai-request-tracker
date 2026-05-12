@@ -7,6 +7,10 @@ The frontend app is deployed via Github Pages, but due to time constraints, I wa
 
 Link to Deployment: https://rahidas04.github.io/ai-request-tracker/
 
+## Video Demo
+Here is a video demo showing off the features and functionality of the AI Request Tracker.
+
+Video Link: https://drive.google.com/file/d/1VPb0BbFKbEejdu6Y1TlAz51zPp17yp0E/view?usp=sharing
 
 ## Features
 
