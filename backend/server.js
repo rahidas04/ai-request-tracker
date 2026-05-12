@@ -50,15 +50,17 @@ app.post("/api/requests", (req, res) => {
     });
   }
 
-  const sql = `
-    INSERT INTO requests 
-    (name, email, department, project_title, problem_description, urgency, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'Pending')
-  `;
+  const createdAt = new Date().toISOString();
+
+const sql = `
+  INSERT INTO requests 
+  (name, email, department, project_title, problem_description, urgency, status, created_at)
+  VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?)
+`;
 
   db.run(
     sql,
-    [name, email, department, project_title, problem_description, urgency],
+    [name, email, department, project_title, problem_description, urgency, createdAt],
     function (error) {
       if (error) {
         return res.status(500).json({ error: "Failed to create request." });
